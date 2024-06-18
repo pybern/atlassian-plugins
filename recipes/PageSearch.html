@@ -3,15 +3,23 @@
 </form>
 
 <script type="text/javascript">
-    AJS.$("#table-search").keyup(function () {
+    AJS.$("#searchInput").keyup(function () {
     var jqry = AJS.$
     var rows = jqry("tr").hide();
-    if (this.value.length) {
-            var data = this.value.split(" ");
-            jqry.each(data, function (i, v) {
-                    rows.filter(":contains('" + v + "')").show();
-            });
-    } else rows.show();
+    if (this.value.length) {  
+      var data = this.value.split(" ");
+      rows.filter(    function () {
+        all = true;
+        for (i = 0; i < data.length; i++) {
+          if (data[i]) {
+            all = all &&  ($(this).text().toLowerCase().indexOf(data[i].toLowerCase()) >= 0);
+            if (!all) { break; }
+          }
+       }
+       return all;
+      }).show();
+    }
+    else rows.show();
     AJS.$('thead tr').show();
     });
     </script>
