@@ -1,0 +1,350 @@
+<!-- Title: Floating Table of Contents
+    Author: Wade Tracy
+ 
+ 
+ 
+    This code sets up the floating table of contents
+    - Formatting is configured for up to 3 levels of headings
+    - Control your heading levels from the TOC macro
+ 
+ 
+    How to use:
+    1. Use a page layout that puts at least one column on the right to reserve space for the TOC
+    2. Insert a TOC macro in the right column of the layout
+    3. Change the TOC settings and specify ts-toc-btf for the 'CSS Class Name'
+    4. Somewhere in the page (it won't be visible) insert an HTML macro and paste in this code
+    5. Feel free to modify css to get the styling you want
+-->
+ 
+<style>
+    .ts-toc-btf {
+        float: right;
+        position: fixed;
+        width: inherit;
+        right: 0px;
+        top: 300px;
+        background: rgba(229, 232, 232, 0.5);
+        overflow-wrap: normal;
+        visibility: hidden;
+    }
+     
+    .navigation ul {
+      list-style-type: none;
+      padding: 0px;
+    }
+ 
+    .navigation>ul {
+        padding: 10px 15px 10px 10px;
+    }
+     
+    .navigation ul li {
+      white-space: nowrap;
+    }
+ 
+    .navigation ul li a {
+      padding: 0 0 0 10px;
+    }
+ 
+ 
+    .navigation ul li ul li a {
+      padding: 0 0 0 20px;
+    }
+ 
+ 
+    .navigation ul li ul li ul li a {
+      padding: 0 0 0 30px;
+    }
+ 
+    .navigation ul li li {
+      white-space: nowrap;
+    }
+     
+    .navigation ul li span.active a {
+      font-weight: bold;
+      color: #222222;
+      border-left: 2px solid #222222;
+    }
+     
+    .navigation ul li a:link,
+    .navigation ul li a:visited,
+    .navigation ul li a:active,
+    .navigation ul li a:hover,
+    .navigation ul li a:focus {
+      color: #4a72c2;
+      text-decoration: none;
+    }
+     
+</style>
+ 
+ 
+<script type="text/javascript">
+    /*!
+     * Scrollspy Plugin
+     * Author: r3plica
+     * Licensed under the MIT license
+     */
+    ; (function ($, window, document, undefined) {
+        // Add our plugin to fn
+        $.fn.extend({
+            // Scrollspy is the name of the plugin
+            scrollspy: function (options) {
+                // Define our defaults
+                var defaults = {
+                    namespace: 'scrollspy',
+                    activeClass: 'active',
+                    animate: false,
+                    duration: 1000,
+                    offset: 0,
+                    container: window,
+                    replaceState: false
+                };
+     
+                // Add any overriden options to a new object
+                options = $.extend({}, defaults, options);
+                
+                var add = function (ex1, ex2) {
+                    return parseInt(ex1, 10) + parseInt(ex2, 10);
+                };
+     
+                // Find our elements
+                var findElements = function (links) {
+                    var elements = [];
+     
+                    // Loop through the links
+                    for (var i = 0; i < links.length; i++) {
+                        var link = links[i];
+     
+                        // Get our hash
+                        var hash = $(link).attr("href");
+     
+                        // Store our has as an element
+                        var element = $("[id='" + hash.replace('#','') + "']");
+     
+                        // If we have an element matching the hash
+                        if (element.length > 0) {
+     
+                            // Get our offset
+                            var top = Math.floor(element.offset().top),
+                                bottom = top + Math.floor(element.outerHeight());
+     
+                            // Add to our array
+                            elements.push({ element: element, hash: hash, top: top, bottom: bottom });
+                        }
+                    }
+
+                    return elements;
+                };
+     
+                // Find our link from a hash
+                var findLink = function (links, hash) {
+                    for (var i = 0; i < links.length; i++) {
+                        var link = $(links[i]);
+     
+                        // If our hash matches the link href
+                        if (link.attr("href") === hash) {
+     
+                            // Return the link
+                            return link;
+                        }
+                    }
+                };
+     
+                // Reset classes on our elements
+                var resetClasses = function (links) {
+     
+                    // For each link
+                    for (var i = 0; i < links.length; i++) {
+     
+                        // Get our current link
+                        var link = $(links[i]);
+     
+                        // Remove the active class
+                        link.parent().removeClass(options.activeClass);
+                    }
+                };
+     
+                // Find the nearest heading whether at the top of the screen or off the screen
+                var getActiveHeadingHash = function (elements) {
+     
+                    // Get the position and store in an object
+                    var position = {
+                        top: add($(this).scrollTop(), Math.abs(options.offset)),
+                        left: $(this).scrollLeft()
+                    };
+     
+                    // Store the nearest heading off the top of the page
+                    var nearest = null;
+     
+                    // Loop through our elements
+                    for (var i = 0; i < elements.length; i++) {
+     
+                        // Get our current item
+                        var current = elements[i];
+     
+                        // If we are within the boundaries of our element return that link
+                        if (position.top >= current.top && position.top <= current.bottom)
+                            return current.hash;
+                        // Otherwise, return the closest of the top of the screen--they are in order
+                        else if (position.top > current.bottom) {
+                            nearest = current.hash;
+                        }
+                    }
+     
+                    return nearest;
+                };
+     
+                // Store last fired scroll event
+                var scrollArea = '';
+     
+                // For each scrollspy instance
+                return this.each(function () {
+     
+                    // Declare our global variables
+                    var element = this,
+                        container = $(options.container);
+     
+                    // Get our objects
+                    var links = $(element).find('a');
+     
+                    // Loop through our links
+                    for (var i = 0; i < links.length; i++) {
+     
+                        // Get our current link
+                        var link = links[i];
+     
+                        // Bind the click event
+                        $(link).on("click", function (e) {
+     
+                            // Get our target
+                            var target = $(this).attr("href"),
+                                $target = $(target);
+     
+                            // If we have the element
+                            if ($target.length > 0) {
+     
+                                // Get it's scroll position
+                                var top = add($target.offset().top, options.offset);
+     
+                                // If animation is on
+                                if (options.animate) {
+     
+                                    // Animate our scroll
+                                    $('html, body').animate({ scrollTop: top }, options.duration);
+                                } else {
+     
+                                    // Scroll to our position
+                                    window.scrollTo(0, top);
+                                }
+                                 
+                                location.hash = target;
+     
+                                // Prevent our link
+                                e.preventDefault();
+                            }
+                        });
+                    }
+     
+                    // Set links
+                    resetClasses(links);
+     
+                    // Get our elements (targets of the navigation links)
+                    var elements = findElements(links);
+     
+                    var trackChanged = function() {
+     
+                        // Create a variable for our link
+                        var link;
+     
+                        // get our element
+                        var hash = getActiveHeadingHash(elements);
+     
+                        // Get the link
+                        link = findLink(links, hash);
+     
+                        // If we have a link
+                        if (link) {
+                            // If we have an onChange function
+                            if (options.onChange && (scrollArea !== hash)) {
+     
+                                // Fire our onChange function
+                                options.onChange(current.element, $(element), position);
+     
+                                // set scrollArea
+                                scrollArea = hash;
+     
+                            }
+     
+                            // Update url
+                            if (options.replaceState) {
+                                history.replaceState( {}, '', '/' + hash );
+                            }
+     
+                            // Reset the classes on all other link
+                            resetClasses(links);
+     
+                            // Add our active link to our parent
+                            link.parent().addClass(options.activeClass);
+                        }
+     
+                        // If we don't have a link and we have a exit function
+                        if (!link && (scrollArea !== 'exit') && options.onExit) {
+     
+                            // Fire our onChange function
+                            options.onExit($(element), position);
+     
+                            // Reset the classes on all other link
+                            resetClasses(links);
+     
+                            // set scrollArea
+                            scrollArea = 'exit';
+     
+                            // Update url
+                            if (options.replaceState) {
+                                history.replaceState( {}, '', '/' );
+                            }
+     
+                        }
+                    };
+     
+                    // Add a listener to the window
+                    container.bind('scroll.' + options.namespace, function () {
+                        trackChanged();
+                    });
+     
+                    $(document).ready(function (e) {
+                        trackChanged();
+                    });
+                });
+            }
+        });
+    })(jQuery, window, document, undefined);
+ 
+    var getMenuWidth = function() {
+        // Need to get the padding of the main window since menu goes to edge of window
+        var mainPadding = ($('#main').innerWidth() - $('#main').width()) / 2;
+        var parentWidth = AJS.$(".ts-toc-btf").parent().parent().outerWidth();
+        return parentWidth + mainPadding;
+    };
+     
+    AJS.$(window).load(function(){
+ 
+        var content_top = AJS.$('#content').offset().top;
+        var menu_width = getMenuWidth();
+        var max_width = AJS.$('.ts-toc-btf').width();
+ 
+        AJS.$(".ts-toc-btf")
+            .addClass('navigation')
+            .attr('id', 'nav')
+            .css({'top': content_top, 'visibility': 'visible', 'width': menu_width, 'max-width': max_width});
+        AJS.$("#nav").scrollspy();
+    });
+ 
+    AJS.$(window).resize(function() {
+        var menu_width = getMenuWidth();
+ 
+        AJS.$(".ts-toc-btf")
+            .css({'width': menu_width});
+    });
+</script>
+
+

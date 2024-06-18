@@ -1,0 +1,17 @@
+<form class="aui">
+<input class="text medium-long-field" type="text" id="table-search" placeholder="Enter Search term">
+</form>
+
+<script type="text/javascript">
+    AJS.$("#table-search").keyup(function () {
+    var jqry = AJS.$
+    var rows = jqry("tr").hide();
+    if (this.value.length) {
+            var data = this.value.split(" ");
+            jqry.each(data, function (i, v) {
+                    rows.filter(":contains('" + v + "')").show();
+            });
+    } else rows.show();
+    AJS.$('thead tr').show();
+    });
+    </script>
